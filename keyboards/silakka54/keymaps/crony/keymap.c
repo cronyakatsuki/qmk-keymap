@@ -93,13 +93,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     )
 };
 
-// Set diff tapping term for specific keys
+// Per-key tapping term offsets.
+// GUI keys get a bump since accidental Win/Cmd shortcuts are disruptive.
+// Shift and Ctrl use the baseline — HOLD_ON_OTHER_KEY_PRESS handles
+// cross-hand fast rolls already.
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case HOME_A:
-            return TAPPING_TERM + 15;
         case HOME_SCLN:
-            return TAPPING_TERM + 15;
+            return TAPPING_TERM + 20;   // LGUI / RGUI — need firmer hold
         default:
             return TAPPING_TERM;
     }

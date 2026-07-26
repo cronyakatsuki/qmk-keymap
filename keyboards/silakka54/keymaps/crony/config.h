@@ -16,9 +16,22 @@
 
 #pragma once
 
-// Configure the global tapping term and allow for setting for specific key
-#define TAPPING_TERM 160
+// ── Home row mod tuning ──
+
+// Base tapping term — generous to avoid accidental mods
+#define TAPPING_TERM 180
+
+// Per-key override enabled
 #define TAPPING_TERM_PER_KEY
 
-// Enable rapid switch from tap to hold, disables double tap hold auto-repeat.
+// Cross-hand mod fires instantly — same-hand waits for tapping term.
+// This lets you type fast across hands (e.g. Shift + letter) while
+// preventing accidental mods from same-hand rollover.
+#define HOLD_ON_OTHER_KEY_PRESS
+
+// Long hold + release without pressing anything else = tap on release.
+// Catches accidental holds when you're just hesitating.
+#define RETRO_TAPPING
+
+// Double-tap always = character (not hold auto-repeat)
 #define QUICK_TAP_TERM 0
