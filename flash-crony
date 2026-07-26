@@ -37,6 +37,62 @@ info()  { echo -e "${CYAN}[INFO]${NC}  $*"; }
 ok()    { echo -e "${GREEN}[OK]${NC}    $*"; }
 error() { echo -e "${RED}[ERROR]${NC} $*"; }
 
+# ─── RP2040 volume detection ───
+
+# Poll for the RP2040 bootloader mass storage volume to appear.
+# The RP2040 mounts as "RPI-RP2" when in bootloader mode.
+wait_for_rp2040() {
+    local half="$1"
+    local timeout="${2:-60}"  # seconds
+    local interval=0.5
+
+    echo
+    echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}  Flashing ${half^^} half of ${KEYBOARD}/${KEYMAP}${NC}"
+    echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}"
+    echo
+    info "Put the ${half^^} half into bootloader mode now:"
+    echo
+    echo -e "    ${CYAN}Option 1:${NC} Hold the BOOT button on the RP2040 Zero"
+    echo -e "            and connect it to the PC via USB."
+    echo -e "    ${CYAN}Option 2:${NC} If already running, press the key mapped to"
+    echo -e "            ${CYAN}QK_BOOT${NC} to enter bootloader mode."
+    echo
+    echo -ne "${CYAN}Waiting for ${half^^} half${NC} "
+
+    local elapsed=0
+    while [ "$elapsed" -lt "$timeout" ]; do
+        # Check common mount points
+        local mount_point=""
+        for mp in "/media/$USER/RPI-RP2" "/run/media/$USER/RPI-RP2" "/mnt/RPI-RP2"; do
+            if [ -d "$mp" ]; then
+                mount_point="$mp"
+                break
+            fi
+        done
+
+        # Also look through lsblk for any mounted "RPI-RP2"
+        if [ -z "$mount_point" ]; then
+            mount_point="$(lsblk -o MOUNTPOINT -n 2>/dev/null | grep -i "RPI-RP2" | head -1)"
+        fi
+
+        if [ -n "$mount_point" ]; then
+            echo
+            ok "Detected ${half^^} half at ${mount_point}"
+            return 0
+        fi
+
+        printf "."
+        sleep "$interval"
+        elapsed=$((elapsed + 1))
+    done
+
+    echo
+    error "Timed out after ${timeout}s waiting for ${half^^} half."
+    error "Make sure the board is in bootloader mode and connected via USB."
+    return 1
+}
+
 # ─── TRRS safety warning ───
 
 trrs_warning() {
@@ -73,22 +129,7 @@ flash_half() {
     local half="$1"
     local bootloader="uf2-split-${half}"
 
-    echo
-    echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}"
-    echo -e "${YELLOW}  Flashing ${half^^} half of ${KEYBOARD}/${KEYMAP}${NC}"
-    echo -e "${YELLOW}  (bootloader: ${bootloader})${NC}"
-    echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}"
-    echo
-    info "Make sure the TRRS cable is DISCONNECTED."
-    info "Flash each half on its own, connected only via USB."
-    echo
-    info "Put the ${half^^} half into bootloader mode:"
-    echo -e "    ${CYAN}Option 1:${NC} Hold the BOOT button on the RP2040 Zero"
-    echo -e "            and connect it to the PC via USB."
-    echo -e "    ${CYAN}Option 2:${NC} If already running, press the key mapped to"
-    echo -e "            ${CYAN}QK_BOOT${NC} to enter bootloader mode."
-    echo
-    read -rp "$(echo -e ${CYAN}[Press Enter when the ${half^^} half is in bootloader mode]${NC})"
+    wait_for_rp2040 "$half"
 
     info "Flashing ${half} half ..."
     if qmk flash -kb "$KEYBOARD" -km "$KEYMAP" -bl "$bootloader"; then
@@ -124,7 +165,6 @@ main() {
             compile_firmware
 
             trrs_warning
-            read -rp "$(echo -e ${CYAN}[Press Enter when you\'ve read and understood the warning]${NC})"
 
             flash_half "left"  || { error "Aborting — left half failed."; exit 1; }
             flash_half "right" || { error "Aborting — right half failed."; exit 1; }
@@ -160,12 +200,10 @@ main() {
             ;;
         left)
             trrs_warning
-            read -rp "$(echo -e ${CYAN}[Press Enter when you've read and understood the warning]${NC})"
             flash_half "left"
             ;;
         right)
             trrs_warning
-            read -rp "$(echo -e ${CYAN}[Press Enter when you\'ve read and understood the warning]${NC})"
             flash_half "right"
             ;;
         -h|--help|help)
