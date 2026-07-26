@@ -28,6 +28,7 @@ enum layer {
 
 // Layer switch keys
 #define L_GMNG       TG(_GAMING)           // toggle gaming layer on/off
+#define L_BASE       TO(_BASE)             // go to base layer (exits gaming mode)
 #define L_MOUSE      LT(_MOUSE, KC_SPC)
 #define L_ARROW      LT(_NAV, KC_ESC)
 #define L_FUNCTIONS  LT(_FUNC, KC_ENT)
@@ -56,7 +57,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,                         KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
         L_FUNCTIONS, KC_A, KC_S,   KC_D,    KC_F,    KC_TRNS,                         KC_TRNS, KC_J,    KC_K,    KC_L,    KC_SCLN, KC_TRNS,
         KC_LSFT, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,                         KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-                                             KC_LCTL, KC_SPC,  KC_ESC,       KC_TRNS, KC_TRNS, L_GMNG
+                                             KC_LCTL, KC_SPC,  KC_ESC,       KC_TRNS, KC_TRNS, L_BASE
     ),
 
     [_MOUSE] = LAYOUT(
