@@ -42,6 +42,18 @@ enum layer {
 #define CRO_CACU RALT(HR_CACU)   // ć / Ć  (AltGr + ')
 #define CRO_Z    RALT(HR_ZCAR)   // ž / Ž  (AltGr + \)
 
+// Chordal Hold: explicitly define left/right handedness for the split matrix.
+// Rows 0-4 = left hand, rows 5-9 = right hand.
+// '*' = exempt from opposite-hands rule (thumb cluster can chord with either hand).
+const char chordal_hold_layout[MATRIX_ROWS][MATRIX_COLS] PROGMEM =
+    LAYOUT(
+        'L', 'L', 'L', 'L', 'L', 'L',  'R', 'R', 'R', 'R', 'R', 'R',
+        'L', 'L', 'L', 'L', 'L', 'L',  'R', 'R', 'R', 'R', 'R', 'R',
+        'L', 'L', 'L', 'L', 'L', 'L',  'R', 'R', 'R', 'R', 'R', 'R',
+        'L', 'L', 'L', 'L', 'L', 'L',  'R', 'R', 'R', 'R', 'R', 'R',
+                               '*', '*', '*',   '*', '*', '*'
+    );
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [_BASE] = LAYOUT(
@@ -94,18 +106,95 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 
 // Per-key tapping term offsets.
-// GUI keys get a bump since accidental Win/Cmd shortcuts are disruptive.
-// Shift keys are lowered by 50ms since HOLD_ON_OTHER_KEY_PRESS was removed —
-// they need to fire as mods quickly when held, without accidental triggers.
+// GUI keys get a bump since accidental Win/Cmd shortcuts are disruptive with
+// standard TAPPING_TERM. Shift no longer needs shortening — Chordal Hold
+// handles the roll case correctly.
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case HOME_A:
         case HOME_SCLN:
             return TAPPING_TERM + 20;   // LGUI / RGUI — need firmer hold
-        case HOME_F:
-        case HOME_J:
-            return TAPPING_TERM - 50;   // LSFT / RSFT — quicker mod activation
         default:
             return TAPPING_TERM;
     }
+}
+
+// ── Flow Tap: exempt Shift keys so they always have a fair chance to be
+// modifiers, even during fast typing.
+bool is_flow_tap_key(uint16_t keycode) {
+    // Get the mod from a Mod-Tap key
+    switch (keycode) {
+        case HOME_F:  // LSFT_T(KC_F)
+        case HOME_J:  // RSFT_T(KC_J)
+            return false;  // Shift keys always bypass Flow Tap
+        default:
+            return true;   // All other keys use standard Flow Tap
+    }
+}
+
+// ── Chordal Hold: allow common same-hand hotkeys and shift+letter combos
+// that would otherwise be incorrectly settled as taps.
+bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record,
+                      uint16_t other_keycode, keyrecord_t *other_record) {
+    switch (tap_hold_keycode) {
+        // Left Shift + any left-hand letter → hold for capitalization
+        case HOME_F:  // LSFT_T(KC_F)
+            // Allow same-hand shift+letter for capitalization
+            if (other_keycode >= KC_A && other_keycode <= KC_G) {
+                return true;
+            }
+            if (other_keycode == KC_Z || other_keycode == KC_X || other_keycode == KC_V || other_keycode == KC_B) {
+                return true;
+            }
+            break;
+
+        // Right Shift + any right-hand letter → hold for capitalization
+        case HOME_J:  // RSFT_T(KC_J)
+            if (other_keycode >= KC_H && other_keycode <= KC_SCLN) {
+                return true;
+            }
+            if (other_keycode == KC_N || other_keycode == KC_M || other_keycode == KC_COMM || other_keycode == KC_DOT || other_keycode == KC_SLSH || other_keycode == KC_QUOT) {
+                return true;
+            }
+            break;
+
+        // Left Ctrl + common hotkeys on the same hand
+        case HOME_D:  // LCTL_T(KC_D)
+            switch (other_keycode) {
+                case KC_C:  // Ctrl+C (copy)
+                case KC_V:  // Ctrl+V (paste)
+                case KC_X:  // Ctrl+X (cut)
+                case KC_Z:  // Ctrl+Z (undo)
+                case KC_A:  // Ctrl+A (select all)
+                case KC_S:  // Ctrl+S (save)
+                case KC_F:  // Ctrl+F (find)
+                case KC_W:  // Ctrl+W (close tab)
+                case KC_R:  // Ctrl+R (refresh)
+                    return true;
+            }
+            break;
+
+        // Left Alt + Tab for Alt+Tab switching
+        case HOME_S:  // LALT_T(KC_S)
+            if (other_keycode == KC_TAB || other_keycode == KC_LBRC) {
+                return true;
+            }
+            break;
+
+        // Left GUI + Space for search/spotlight (space is right thumb)
+        case HOME_A:  // LGUI_T(KC_A)
+            if (other_keycode == KC_SPC) {
+                return true;
+            }
+            break;
+
+        // Right Ctrl + /  (common in some apps)
+        case HOME_K:  // RCTL_T(KC_K)
+            if (other_keycode == KC_SLSH) {
+                return true;
+            }
+            break;
+    }
+    // Default: use the opposite-hands rule
+    return get_chordal_hold_default(tap_hold_record, other_record);
 }

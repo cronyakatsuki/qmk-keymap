@@ -16,10 +16,22 @@
 
 #pragma once
 
+// ── Chordal Hold (opposite-hands rule) ──
+#define CHORDAL_HOLD
+#define PERMISSIVE_HOLD
+
+// ── Speculative Hold ──
+#define SPECULATIVE_HOLD
+
+// ── Flow Tap ──
+#define FLOW_TAP_TERM 150
+
 // ── Home row mod tuning ──
 
-// Base tapping term — generous to avoid accidental mods
-#define TAPPING_TERM 180
+// Base tapping term — 225ms gives a good balance with Chordal Hold.
+// Chordal Hold settles same-hand rolls as taps immediately, so the tapping
+// term mainly affects lone mod holds and cross-hand chords.
+#define TAPPING_TERM 225
 
 // Per-key override enabled
 #define TAPPING_TERM_PER_KEY
