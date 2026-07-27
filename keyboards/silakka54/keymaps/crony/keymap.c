@@ -95,13 +95,16 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 // Per-key tapping term offsets.
 // GUI keys get a bump since accidental Win/Cmd shortcuts are disruptive.
-// Shift and Ctrl use the baseline — HOLD_ON_OTHER_KEY_PRESS handles
-// cross-hand fast rolls already.
+// Shift keys are lowered by 50ms since HOLD_ON_OTHER_KEY_PRESS was removed —
+// they need to fire as mods quickly when held, without accidental triggers.
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case HOME_A:
         case HOME_SCLN:
             return TAPPING_TERM + 20;   // LGUI / RGUI — need firmer hold
+        case HOME_F:
+        case HOME_J:
+            return TAPPING_TERM - 50;   // LSFT / RSFT — quicker mod activation
         default:
             return TAPPING_TERM;
     }
