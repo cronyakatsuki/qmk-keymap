@@ -113,9 +113,10 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     return TAPPING_TERM;
 }
 
-// ── Flow Tap: exempt Shift keys so they always have a fair chance to be
-// modifiers, even during fast typing. Also disable Flow Tap while a hotkey
+// ── Flow Tap: scope to typing keys, and never flow-tap while a hotkey
 // mod is active (stock QMK behavior) to prevent eating mod-intent keys.
+// Shift keys (F/J) are flow-tap enabled — with a shorter window, see
+// get_flow_tap_term() below.
 bool is_flow_tap_key(uint16_t keycode) {
     // Never flow-tap while a hotkey modifier is already active
     if ((get_mods() & (MOD_MASK_CG | MOD_BIT_LALT)) != 0) {
@@ -136,6 +137,24 @@ bool is_flow_tap_key(uint16_t keycode) {
         default:
             return false;
     }
+}
+
+// ── Flow Tap term: Shift keys get a SHORTER flow window (100ms vs 150ms).
+// Ultra-fast typing rolls still force taps (protects "first"/"full"),
+// but a deliberate hold-to-capitalize that starts a touch later escapes
+// the window and becomes Shift.
+//   Tune: lower (e.g. -70 → 80ms)  = capitals more reliable, typing less safe
+//         higher (e.g. -30 → 120ms) = typing safer, capitals rarer
+uint16_t get_flow_tap_term(uint16_t keycode, keyrecord_t *record, uint16_t prev_keycode) {
+    if (is_flow_tap_key(keycode) && is_flow_tap_key(prev_keycode)) {
+        switch (get_tap_keycode(keycode)) {
+            case KC_F:   // LSFT_T(KC_F)
+            case KC_J:   // RSFT_T(KC_J)
+                return FLOW_TAP_TERM - 50;   // 100ms for Shift keys
+        }
+        return FLOW_TAP_TERM;               // 150ms for everything else
+    }
+    return 0;   // Flow Tap disabled for this pair
 }
 
 // ── Chordal Hold: allow common same-hand hotkeys and shift+letter combos
