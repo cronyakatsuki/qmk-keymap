@@ -26,9 +26,6 @@
 // ── Speculative Hold ──
 #define SPECULATIVE_HOLD
 
-// ── Flow Tap ──
-#define FLOW_TAP_TERM 150
-
 // ── Home row mod tuning ──
 
 // Base tapping term — 190ms with RETRO_TAPPING removes the drop window.
@@ -39,12 +36,12 @@
 // Per-key override enabled
 #define TAPPING_TERM_PER_KEY
 
-// How long the Shift home-row keys (F/J) must be held before a chord with
-// another key counts as a deliberate Shift (capital). A key pressed sooner
-// than this after F/J goes down resolves as taps (typing protection).
-//   Tune: lower (e.g. 70)  = capitals easier to hit, typing less protected
-//         raise (e.g. 120) = typing safer, capitals need a longer hold
-#define SHIFT_CHORD_TERM 90
+// How long ANY home-row mod must be held before a chord with another key
+// counts as deliberate (modifier/capital). A key pressed sooner than this
+// after the mod goes down resolves as taps (fast-typing protection).
+//   Tune: lower (e.g. 70)  = hotkeys easier to hit, typing less protected
+//         raise (e.g. 120) = typing safer, hotkeys need a longer hold
+#define CHORD_TERM 90
 
 // Double-tap always = character (not hold auto-repeat)
 #define QUICK_TAP_TERM 0
