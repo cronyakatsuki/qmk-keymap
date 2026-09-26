@@ -107,8 +107,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 // Per-key tapping term offsets.
 // With RETRO_TAPPING + HOLD_ON_OTHER_KEY_PRESS, the GUI bump is no longer
-// needed — chordal hold + flow tap guard accidental Win chords, and retro
-// tapping prevents dropped keys on slow releases.
+// needed — the uniform chordal-hold timing rule guards accidental Win chords,
+// and retro tapping prevents dropped keys on slow releases.
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     return TAPPING_TERM;
 }
