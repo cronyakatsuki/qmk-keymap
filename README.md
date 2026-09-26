@@ -1,8 +1,8 @@
 # crony keymap — QMK layout for Silakka54
 
 A personal QMK keymap overlay for the **Silakka54** split ergonomic keyboard.
-Built around home-row mods, Chordal Hold, Flow Tap, and custom layers for
-navigation, mouse control, and Croatian diacritics.
+Built around home-row mods with a uniform chord-timing rule and custom layers
+for navigation, mouse control, and Croatian diacritics.
 
 > **Keyboard**: [Silakka54](https://github.com/piit79/Silakka54) — a 54-key
 > column-staggered split keyboard (RP2040 Zero controllers, EE_HANDS).
@@ -11,19 +11,15 @@ navigation, mouse control, and Croatian diacritics.
 
 ## Features
 
-- **Home-row mods** — six Mod-Tap keys on the home row for Shift, Ctrl, Alt,
+- **Home-row mods** — eight Mod-Tap keys on the home row for Shift, Ctrl, Alt,
   and GUI. No dedicated modifier keys needed.
-- **Chordal Hold** — QMK's opposite-hands rule for mod-tap keys. When you
-  press a mod-tap key and another key on the *same* hand, the mod-tap always
-  resolves as a tap (character). When the other key is on the *opposite* hand,
-  it resolves as a modifier hold. Explicit exceptions are configured for
-  common same-hand shortcuts like Ctrl+C/V/X/Z, Alt+Tab, and Shift+letter
-  capitalization.
-- **Flow Tap** — reduces the effective tapping term when typing at speed by
-  detecting fast sequences and treating them as taps. Shift keys are exempt so
-  they reliably produce capitals.
-- **Gaming layer** — disables home-row mods on WASD and provides a dedicated
-  layer toggle. No accidental mods during gameplay.
+- **Chord discrimination** — a uniform, Achordion-style timing rule replaces
+  hand-position heuristics: a key pressed within `CHORD_TERM` (150 ms) of a
+  home-row mod is a typing roll (tap); pressed later, it's a deliberate chord
+  (hold). No exception lists — same-hand and cross-hand shortcuts work alike,
+  in any language.
+- **Gaming layer** — home-row keys become plain letters during play, with a
+  dedicated toggle. No accidental mods during gameplay.
 - **Navigation layer** — arrow keys and Page Up/Down on the right hand,
   activated by holding Escape.
 - **Mouse layer** — mouse movement, scrolling, and clicks on the right hand,
@@ -35,6 +31,27 @@ navigation, mouse control, and Croatian diacritics.
 - **TRRS hot-plug warnings** — the `flash-crony` script prints prominent
   safety instructions to prevent controller damage when connecting/disconnecting
   the split halves.
+
+## Chord discrimination
+
+Home-row mods don't use QMK's stock opposite-hands rule. Every home-row
+mod-tap key uses the same discriminator: **how long the mod was held before
+the other key arrived**. Implemented in `get_chordal_hold()` in `keymap.c`.
+
+- Other key pressed **within `CHORD_TERM` (150 ms)** of the mod going down →
+  typing roll → **tap**. Protects fast typing on either hand, in any language
+  ("da", "dva", "država", "kako", "first", "slon" …).
+- Other key pressed **after `CHORD_TERM`** → deliberate → **hold**. Works for
+  same-hand *and* cross-hand chords: hold D a beat then C → Ctrl+C; hold F a
+  beat then E → capital E.
+
+Layer-tap thumb keys (`LT(_MOUSE/NAV/FUNC/CRO)`) are exempt and keep the
+default chordal-hold rule (hold whenever chorded), so fluent layer use
+(Esc + arrows, Space + mouse) stays instant.
+
+Tuning (`CHORD_TERM` in `config.h`):
+- Accidental hotkeys while typing casually → raise (170–180).
+- Hotkeys need an uncomfortably long hold → lower (120–130).
 
 ## Layer overview
 
@@ -218,17 +235,18 @@ To disconnect: unplug USB first, then disconnect TRRS.
 
 Key settings in [`config.h`](keyboards/silakka54/keymaps/crony/config.h):
 
-| Setting              | Value | Notes                              |
-|----------------------|-------|------------------------------------|
-| `TAPPING_TERM`       | 225ms | Base mod-tap timeout               |
-| `FLOW_TAP_TERM`      | 150ms | Tap acceleration window            |
-| `QUICK_TAP_TERM`     | 0     | Double-tap always = character      |
-| `CHORDAL_HOLD`       | on    | Opposite-hands rule                |
-| `PERMISSIVE_HOLD`    | on    | Allow mod + key on same press      |
-| `SPECULATIVE_HOLD`   | on    | Early hold decision when possible  |
+| Setting                  | Value | Notes                                |
+|--------------------------|-------|--------------------------------------|
+| `TAPPING_TERM`           | 190ms | Flat base mod-tap timeout            |
+| `CHORD_TERM`             | 150ms | Max gap for a chord to be a tap      |
+| `QUICK_TAP_TERM`         | 0     | Double-tap always = character        |
+| `CHORDAL_HOLD`           | on    | Uniform timing rule (custom logic)   |
+| `HOLD_ON_OTHER_KEY_PRESS`| on    | Deliberate chords settle at press    |
+| `RETRO_TAPPING`          | on    | No dropped keys on slow releases     |
+| `SPECULATIVE_HOLD`       | on    | Early hold decision when possible    |
 
-Per-key tapping term bumps for GUI keys (+20ms) to reduce accidental
-Win/Cmd activations.
+Removed during tuning: `PERMISSIVE_HOLD`, `FLOW_TAP_TERM`, and the per-key
+GUI tap-term bump — `get_tapping_term()` returns a flat 190 ms for everything.
 
 ## Project structure
 
