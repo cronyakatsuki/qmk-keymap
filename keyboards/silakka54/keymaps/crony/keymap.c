@@ -120,15 +120,29 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
 }
 
 // ── Flow Tap: exempt Shift keys so they always have a fair chance to be
-// modifiers, even during fast typing.
+// modifiers, even during fast typing. Also disable Flow Tap while a hotkey
+// mod is active (stock QMK behavior) to prevent eating mod-intent keys.
 bool is_flow_tap_key(uint16_t keycode) {
-    // Get the mod from a Mod-Tap key
-    switch (keycode) {
-        case HOME_F:  // LSFT_T(KC_F)
-        case HOME_J:  // RSFT_T(KC_J)
+    // Never flow-tap while a hotkey modifier is already active
+    if ((get_mods() & (MOD_MASK_CG | MOD_BIT_LALT)) != 0) {
+        return false;
+    }
+    switch (get_tap_keycode(keycode)) {
+        case KC_F:   // LSFT_T(KC_F)
+        case KC_J:   // RSFT_T(KC_J)
             return false;  // Shift keys always bypass Flow Tap
+        case KC_A ... KC_Z:
+        case KC_DOT:
+        case KC_COMM:
+        case KC_SCLN:
+        case KC_SLSH:
+        case KC_SPC:
+        case KC_ESC:
+        case KC_ENT:
+        case KC_BSPC:
+            return true;   // Typing keys flow-tap while typing fast
         default:
-            return true;   // All other keys use standard Flow Tap
+            return false;
     }
 }
 
