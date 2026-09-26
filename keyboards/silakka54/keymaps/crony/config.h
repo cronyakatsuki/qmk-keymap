@@ -39,9 +39,11 @@
 // How long ANY home-row mod must be held before a chord with another key
 // counts as deliberate (modifier/capital). A key pressed sooner than this
 // after the mod goes down resolves as taps (fast-typing protection).
-//   Tune: lower (e.g. 70)  = hotkeys easier to hit, typing less protected
-//         raise (e.g. 120) = typing safer, hotkeys need a longer hold
-#define CHORD_TERM 90
+// The threshold must sit ABOVE your casual typing gaps (chat rhythm runs
+// 100-200ms — 90 was too low) and BELOW your deliberate hold (~200ms+).
+//   Tune: still accidental while typing casually → raise (170-180)
+//         hotkeys need uncomfortably long hold → lower (120-130)
+#define CHORD_TERM 150
 
 // Double-tap always = character (not hold auto-repeat)
 #define QUICK_TAP_TERM 0
