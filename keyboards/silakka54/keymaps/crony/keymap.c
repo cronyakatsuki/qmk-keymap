@@ -122,10 +122,6 @@ bool is_flow_tap_key(uint16_t keycode) {
         return false;
     }
     uint16_t tap = get_tap_keycode(keycode);
-    // Shift HRM exemption (checked before the alpha range to avoid case overlap)
-    if (tap == KC_F || tap == KC_J) {
-        return false;
-    }
     switch (tap) {
         case KC_A ... KC_Z:
         case KC_DOT:
@@ -147,26 +143,11 @@ bool is_flow_tap_key(uint16_t keycode) {
 bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record,
                       uint16_t other_keycode, keyrecord_t *other_record) {
     switch (tap_hold_keycode) {
-        // Left Shift + any left-hand letter → hold for capitalization
-        case HOME_F:  // LSFT_T(KC_F)
-            // Allow same-hand shift+letter for capitalization
-            if (other_keycode >= KC_A && other_keycode <= KC_G) {
-                return true;
-            }
-            if (other_keycode == KC_Z || other_keycode == KC_X || other_keycode == KC_V || other_keycode == KC_B) {
-                return true;
-            }
-            break;
-
-        // Right Shift + any right-hand letter → hold for capitalization
-        case HOME_J:  // RSFT_T(KC_J)
-            if (other_keycode >= KC_H && other_keycode <= KC_SCLN) {
-                return true;
-            }
-            if (other_keycode == KC_N || other_keycode == KC_M || other_keycode == KC_COMM || other_keycode == KC_DOT || other_keycode == KC_SLSH || other_keycode == KC_QUOT) {
-                return true;
-            }
-            break;
+        // Shift keys intentionally have NO same-hand exceptions.
+        // Same-hand F/J + letter always resolves as a tap, so typing words
+        // like "few" / "just" never mis-chords into Shift. Capitals still
+        // work cross-hand via the opposite shift (hold J + left letter, or
+        // hold F + right letter) through the default opposite-hands rule.
 
         // Left Ctrl + common hotkeys on the same hand
         case HOME_D:  // LCTL_T(KC_D)
