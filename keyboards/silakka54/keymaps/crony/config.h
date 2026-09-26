@@ -39,5 +39,12 @@
 // Per-key override enabled
 #define TAPPING_TERM_PER_KEY
 
+// How long the Shift home-row keys (F/J) must be held before a chord with
+// another key counts as a deliberate Shift (capital). A key pressed sooner
+// than this after F/J goes down resolves as taps (typing protection).
+//   Tune: lower (e.g. 70)  = capitals easier to hit, typing less protected
+//         raise (e.g. 120) = typing safer, capitals need a longer hold
+#define SHIFT_CHORD_TERM 90
+
 // Double-tap always = character (not hold auto-repeat)
 #define QUICK_TAP_TERM 0
