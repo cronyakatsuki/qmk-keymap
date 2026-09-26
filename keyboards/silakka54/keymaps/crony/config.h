@@ -45,5 +45,12 @@
 //         hotkeys need uncomfortably long hold → lower (120-130)
 #define CHORD_TERM 150
 
+// Shift home-row mods (F/J) use a SHORTER term: deliberate Shift rolls
+// (quotes, capitals, parens) are fast — at the full CHORD_TERM they resolved
+// as taps and a stray "f"/"j" landed before the character.
+//   Tune: stray capitals ("fOr") or "iF<" → raise toward 130
+//         quotes/capitals still eaten → lower toward 90 (90 was clean)
+#define CHORD_TERM_SHIFT 110
+
 // Double-tap always = character (not hold auto-repeat)
 #define QUICK_TAP_TERM 0
