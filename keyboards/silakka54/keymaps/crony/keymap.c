@@ -113,96 +113,37 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     return TAPPING_TERM;
 }
 
-// ── Flow Tap: scope to typing keys, and never flow-tap while a hotkey
-// mod is active (stock QMK behavior) to prevent eating mod-intent keys.
-// Shift keys (F/J) are flow-tap EXEMPT: Flow Tap decides at press time and
-// cannot tell a deliberate hold from a typing roll — it would eat capitals.
-// Shift typing protection instead comes from the timing-based chordal rule
-// (SHIFT_CHORD_TERM in config.h), which judges by hold duration.
-bool is_flow_tap_key(uint16_t keycode) {
-    // Never flow-tap while a hotkey modifier is already active
-    if ((get_mods() & (MOD_MASK_CG | MOD_BIT_LALT)) != 0) {
-        return false;
-    }
-    uint16_t tap = get_tap_keycode(keycode);
-    // Shift HRMs bypass Flow Tap — capitals must never be eaten at press time
-    if (tap == KC_F || tap == KC_J) {
-        return false;
-    }
-    switch (tap) {
-        case KC_A ... KC_Z:
-        case KC_DOT:
-        case KC_COMM:
-        case KC_SCLN:
-        case KC_SLSH:
-        case KC_SPC:
-        case KC_ESC:
-        case KC_ENT:
-        case KC_BSPC:
-            return true;   // Typing keys flow-tap while typing fast
-        default:
-            return false;
-    }
-}
-
-// ── Chordal Hold: allow common same-hand hotkeys and shift+letter combos
-// that would otherwise be incorrectly settled as taps.
+// ── Chordal Hold: uniform timing rule (Achordion-style) ──
+// Every home-row mod uses the same single discriminator: how long the mod
+// key was held before the other key arrived.
+//   • other key pressed within CHORD_TERM of the mod going down → typing
+//     roll → tap. Protects fast typing in either hand, any language
+//     ("da", "dva", "država", "kako", "first", "slon", "a word" …).
+//   • other key pressed later → deliberate → hold. Works for same-hand AND
+//     cross-hand chords: press-hold the mod ~a beat, then the key
+//     (hold D then C → Ctrl+C; hold F then E → capital E).
+// Layer-tap thumb keys are excluded below: they keep the default '*' rule
+// (hold whenever chorded), so fluent layer use (Esc + arrows) stays instant.
 bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record,
                       uint16_t other_keycode, keyrecord_t *other_record) {
     switch (tap_hold_keycode) {
-        // ── Shift keys (F/J): timing-based decision, both hands ──
-        // A key pressed soon after the Shift key goes down is a typing
-        // roll ("few", "first") → tap. A key pressed after holding the
-        // Shift key for SHIFT_CHORD_TERM is a deliberate capital → hold.
-        // Unlike Flow Tap, this judges by hold duration, so a deliberate
-        // press-and-hold is never eaten. Same-hand capitals work again
-        // (hold F + E), as do cross-hand ones (hold F + U).
-        case HOME_F:  // LSFT_T(KC_F)
-        case HOME_J:  // RSFT_T(KC_J)
+        case HOME_A:      // LGUI_T(KC_A)
+        case HOME_S:      // LALT_T(KC_S)
+        case HOME_D:      // LCTL_T(KC_D)
+        case HOME_F:      // LSFT_T(KC_F)
+        case HOME_J:      // RSFT_T(KC_J)
+        case HOME_K:      // RCTL_T(KC_K)
+        case HOME_L:      // LALT_T(KC_L)
+        case HOME_SCLN:   // RGUI_T(KC_SCLN)
             // Consulted at the other key's release → a pending typing roll;
-            // settle as tap (the deliberate case was settled at press time).
+            // settle as tap (deliberate chords were already settled at press
+            // time via HOLD_ON_OTHER_KEY_PRESS).
             if (!other_record->event.pressed) {
                 return false;
             }
-            return TIMER_DIFF_16(other_record->event.time, tap_hold_record->event.time) >= SHIFT_CHORD_TERM;
-
-        // Left Ctrl + common hotkeys on the same hand
-        case HOME_D:  // LCTL_T(KC_D)
-            switch (other_keycode) {
-                case KC_C:  // Ctrl+C (copy)
-                case KC_V:  // Ctrl+V (paste)
-                case KC_X:  // Ctrl+X (cut)
-                case KC_Z:  // Ctrl+Z (undo)
-                case KC_A:  // Ctrl+A (select all)
-                case KC_S:  // Ctrl+S (save)
-                case KC_F:  // Ctrl+F (find)
-                case KC_W:  // Ctrl+W (close tab)
-                case KC_R:  // Ctrl+R (refresh)
-                    return true;
-            }
-            break;
-
-        // Left Alt + Tab for Alt+Tab switching
-        case HOME_S:  // LALT_T(KC_S)
-            if (other_keycode == KC_TAB || other_keycode == KC_LBRC) {
-                return true;
-            }
-            break;
-
-        // Left GUI + Space for search/spotlight (space is right thumb)
-        case HOME_A:  // LGUI_T(KC_A)
-            if (other_keycode == KC_SPC) {
-                return true;
-            }
-            break;
-
-        // Right Ctrl + /  (common in some apps)
-        case HOME_K:  // RCTL_T(KC_K)
-            if (other_keycode == KC_SLSH) {
-                return true;
-            }
-            break;
+            return TIMER_DIFF_16(other_record->event.time, tap_hold_record->event.time) >= CHORD_TERM;
     }
-    // Default: use the opposite-hands rule
+    // Layer-tap thumb keys and everything else: default '*' rule —
+    // thumbs hold whenever chorded with another key.
     return get_chordal_hold_default(tap_hold_record, other_record);
 }
