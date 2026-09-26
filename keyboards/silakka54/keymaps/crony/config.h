@@ -18,7 +18,10 @@
 
 // ── Chordal Hold (opposite-hands rule) ──
 #define CHORDAL_HOLD
-#define PERMISSIVE_HOLD
+#define HOLD_ON_OTHER_KEY_PRESS
+
+// ── Retro Tapping ──
+#define RETRO_TAPPING
 
 // ── Speculative Hold ──
 #define SPECULATIVE_HOLD
@@ -28,10 +31,10 @@
 
 // ── Home row mod tuning ──
 
-// Base tapping term — 225ms gives a good balance with Chordal Hold.
+// Base tapping term — 190ms with RETRO_TAPPING removes the drop window.
 // Chordal Hold settles same-hand rolls as taps immediately, so the tapping
 // term mainly affects lone mod holds and cross-hand chords.
-#define TAPPING_TERM 225
+#define TAPPING_TERM 190
 
 // Per-key override enabled
 #define TAPPING_TERM_PER_KEY

@@ -145,7 +145,7 @@ bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record,
     switch (tap_hold_keycode) {
         // Shift keys intentionally have NO same-hand exceptions.
         // Same-hand F/J + letter always resolves as a tap, so typing words
-        // like "few" / "just" never mis-chords into Shift. Capitals still
+        // like "few" / "just" never accidentally chord into Shift. Capitals still
         // work cross-hand via the opposite shift (hold J + left letter, or
         // hold F + right letter) through the default opposite-hands rule.
 
