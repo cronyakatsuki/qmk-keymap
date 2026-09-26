@@ -106,17 +106,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 
 // Per-key tapping term offsets.
-// GUI keys get a bump since accidental Win/Cmd shortcuts are disruptive with
-// standard TAPPING_TERM. Shift no longer needs shortening — Chordal Hold
-// handles the roll case correctly.
+// With RETRO_TAPPING + HOLD_ON_OTHER_KEY_PRESS, the GUI bump is no longer
+// needed — chordal hold + flow tap guard accidental Win chords, and retro
+// tapping prevents dropped keys on slow releases.
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
-    switch (keycode) {
-        case HOME_A:
-        case HOME_SCLN:
-            return TAPPING_TERM + 20;   // LGUI / RGUI — need firmer hold
-        default:
-            return TAPPING_TERM;
-    }
+    return TAPPING_TERM;
 }
 
 // ── Flow Tap: exempt Shift keys so they always have a fair chance to be
