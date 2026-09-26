@@ -121,10 +121,12 @@ bool is_flow_tap_key(uint16_t keycode) {
     if ((get_mods() & (MOD_MASK_CG | MOD_BIT_LALT)) != 0) {
         return false;
     }
-    switch (get_tap_keycode(keycode)) {
-        case KC_F:   // LSFT_T(KC_F)
-        case KC_J:   // RSFT_T(KC_J)
-            return false;  // Shift keys always bypass Flow Tap
+    uint16_t tap = get_tap_keycode(keycode);
+    // Shift HRM exemption (checked before the alpha range to avoid case overlap)
+    if (tap == KC_F || tap == KC_J) {
+        return false;
+    }
+    switch (tap) {
         case KC_A ... KC_Z:
         case KC_DOT:
         case KC_COMM:
