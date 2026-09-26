@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# flash_crony.sh — Compile and flash the "crony" keymap to the Silakka54
+# flash-crony — Compile and flash the "crony" keymap to the Silakka54
 #
 # The Silakka54 uses RP2040 Zero controllers, so each half must be
 # flashed separately with its own UF2 file:
@@ -14,10 +14,10 @@
 # value is simply ignored).
 #
 # Usage:
-#   ./flash_crony.sh          # compile + flash both halves
-#   ./flash_crony.sh compile  # compile only, no flashing
-#   ./flash_crony.sh left     # flash left half only
-#   ./flash_crony.sh right    # flash right half only
+#   ./flash-crony          # compile + flash both halves
+#   ./flash-crony compile  # compile only, no flashing
+#   ./flash-crony left     # flash left half only
+#   ./flash-crony right    # flash right half only
 #
 
 set -euo pipefail
