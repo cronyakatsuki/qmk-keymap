@@ -15,7 +15,8 @@ for navigation, mouse control, and Croatian diacritics.
   and GUI. No dedicated modifier keys needed.
 - **Chord discrimination** — a uniform, Achordion-style timing rule replaces
   hand-position heuristics: a key pressed within `CHORD_TERM` (150 ms) of a
-  home-row mod is a typing roll (tap); pressed later, it's a deliberate chord
+  home-row mod is a typing roll (tap; 110 ms for Shift keys); pressed later,
+  it's a deliberate chord
   (hold). No exception lists — same-hand and cross-hand shortcuts work alike,
   in any language.
 - **Gaming layer** — home-row keys become plain letters during play, with a
@@ -45,13 +46,19 @@ the other key arrived**. Implemented in `get_chordal_hold()` in `keymap.c`.
   same-hand *and* cross-hand chords: hold D a beat then C → Ctrl+C; hold F a
   beat then E → capital E.
 
+Shift home-row keys (`F`/`J`) use a shorter term, `CHORD_TERM_SHIFT`
+(110 ms): deliberate Shift rolls (quotes, capitals, parens) are fast and get
+eaten at the full 150 ms term — a stray `f`/`j` lands before the character.
+
 Layer-tap thumb keys (`LT(_MOUSE/NAV/FUNC/CRO)`) are exempt and keep the
 default chordal-hold rule (hold whenever chorded), so fluent layer use
 (Esc + arrows, Space + mouse) stays instant.
 
-Tuning (`CHORD_TERM` in `config.h`):
-- Accidental hotkeys while typing casually → raise (170–180).
-- Hotkeys need an uncomfortably long hold → lower (120–130).
+Tuning (in `config.h`):
+- `CHORD_TERM` — accidental hotkeys while typing casually → raise (170–180);
+  hotkeys need an uncomfortably long hold → lower (120–130).
+- `CHORD_TERM_SHIFT` — stray capitals (`fOr`) or `iF<` → raise toward 130;
+  quotes/capitals still eaten → lower toward 90 (90 was clean before).
 
 ## Layer overview
 
@@ -239,6 +246,7 @@ Key settings in [`config.h`](keyboards/silakka54/keymaps/crony/config.h):
 |--------------------------|-------|--------------------------------------|
 | `TAPPING_TERM`           | 190ms | Flat base mod-tap timeout            |
 | `CHORD_TERM`             | 150ms | Max gap for a chord to be a tap      |
+| `CHORD_TERM_SHIFT`       | 110ms | Same, for Shift keys (F/J)           |
 | `QUICK_TAP_TERM`         | 0     | Double-tap always = character        |
 | `CHORDAL_HOLD`           | on    | Uniform timing rule (custom logic)   |
 | `HOLD_ON_OTHER_KEY_PRESS`| on    | Deliberate chords settle at press    |
