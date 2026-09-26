@@ -115,14 +115,20 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
 
 // ── Flow Tap: scope to typing keys, and never flow-tap while a hotkey
 // mod is active (stock QMK behavior) to prevent eating mod-intent keys.
-// Shift keys (F/J) are flow-tap enabled — with a shorter window, see
-// get_flow_tap_term() below.
+// Shift keys (F/J) are flow-tap EXEMPT: Flow Tap decides at press time and
+// cannot tell a deliberate hold from a typing roll — it would eat capitals.
+// Shift typing protection instead comes from the timing-based chordal rule
+// (SHIFT_CHORD_TERM in config.h), which judges by hold duration.
 bool is_flow_tap_key(uint16_t keycode) {
     // Never flow-tap while a hotkey modifier is already active
     if ((get_mods() & (MOD_MASK_CG | MOD_BIT_LALT)) != 0) {
         return false;
     }
     uint16_t tap = get_tap_keycode(keycode);
+    // Shift HRMs bypass Flow Tap — capitals must never be eaten at press time
+    if (tap == KC_F || tap == KC_J) {
+        return false;
+    }
     switch (tap) {
         case KC_A ... KC_Z:
         case KC_DOT:
@@ -139,34 +145,26 @@ bool is_flow_tap_key(uint16_t keycode) {
     }
 }
 
-// ── Flow Tap term: Shift keys get a SHORTER flow window (100ms vs 150ms).
-// Ultra-fast typing rolls still force taps (protects "first"/"full"),
-// but a deliberate hold-to-capitalize that starts a touch later escapes
-// the window and becomes Shift.
-//   Tune: lower (e.g. -70 → 80ms)  = capitals more reliable, typing less safe
-//         higher (e.g. -30 → 120ms) = typing safer, capitals rarer
-uint16_t get_flow_tap_term(uint16_t keycode, keyrecord_t *record, uint16_t prev_keycode) {
-    if (is_flow_tap_key(keycode) && is_flow_tap_key(prev_keycode)) {
-        switch (get_tap_keycode(keycode)) {
-            case KC_F:   // LSFT_T(KC_F)
-            case KC_J:   // RSFT_T(KC_J)
-                return FLOW_TAP_TERM - 50;   // 100ms for Shift keys
-        }
-        return FLOW_TAP_TERM;               // 150ms for everything else
-    }
-    return 0;   // Flow Tap disabled for this pair
-}
-
 // ── Chordal Hold: allow common same-hand hotkeys and shift+letter combos
 // that would otherwise be incorrectly settled as taps.
 bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record,
                       uint16_t other_keycode, keyrecord_t *other_record) {
     switch (tap_hold_keycode) {
-        // Shift keys intentionally have NO same-hand exceptions.
-        // Same-hand F/J + letter always resolves as a tap, so typing words
-        // like "few" / "just" never accidentally chord into Shift. Capitals still
-        // work cross-hand via the opposite shift (hold J + left letter, or
-        // hold F + right letter) through the default opposite-hands rule.
+        // ── Shift keys (F/J): timing-based decision, both hands ──
+        // A key pressed soon after the Shift key goes down is a typing
+        // roll ("few", "first") → tap. A key pressed after holding the
+        // Shift key for SHIFT_CHORD_TERM is a deliberate capital → hold.
+        // Unlike Flow Tap, this judges by hold duration, so a deliberate
+        // press-and-hold is never eaten. Same-hand capitals work again
+        // (hold F + E), as do cross-hand ones (hold F + U).
+        case HOME_F:  // LSFT_T(KC_F)
+        case HOME_J:  // RSFT_T(KC_J)
+            // Consulted at the other key's release → a pending typing roll;
+            // settle as tap (the deliberate case was settled at press time).
+            if (!other_record->event.pressed) {
+                return false;
+            }
+            return TIMER_DIFF_16(other_record->event.time, tap_hold_record->event.time) >= SHIFT_CHORD_TERM;
 
         // Left Ctrl + common hotkeys on the same hand
         case HOME_D:  // LCTL_T(KC_D)
