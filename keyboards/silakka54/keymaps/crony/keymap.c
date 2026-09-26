@@ -116,8 +116,9 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
 // ── Chordal Hold: uniform timing rule (Achordion-style) ──
 // Every home-row mod uses the same single discriminator: how long the mod
 // key was held before the other key arrived.
-//   • other key pressed within CHORD_TERM of the mod going down → typing
-//     roll → tap. Protects fast typing in either hand, any language
+//   • other key pressed within the mod's chord term (CHORD_TERM, or the
+//     shorter CHORD_TERM_SHIFT for Shift keys) of the mod going down →
+//     typing roll → tap. Protects fast typing in either hand, any language
 //     ("da", "dva", "država", "kako", "first", "slon", "a word" …).
 //   • other key pressed later → deliberate → hold. Works for same-hand AND
 //     cross-hand chords: press-hold the mod ~a beat, then the key
@@ -126,6 +127,12 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
 // (hold whenever chorded), so fluent layer use (Esc + arrows) stays instant.
 bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record,
                       uint16_t other_keycode, keyrecord_t *other_record) {
+    // Shift home-row mods (F/J) use the shorter CHORD_TERM_SHIFT: deliberate
+    // Shift rolls (quotes, capitals, parens) are fast and were eaten at the
+    // full CHORD_TERM — a stray "f"/"j" landed before the character.
+    bool is_shift_mod = (tap_hold_keycode == HOME_F) || (tap_hold_keycode == HOME_J);
+    uint16_t chord_term = is_shift_mod ? CHORD_TERM_SHIFT : CHORD_TERM;
+
     switch (tap_hold_keycode) {
         case HOME_A:      // LGUI_T(KC_A)
         case HOME_S:      // LALT_T(KC_S)
@@ -141,7 +148,7 @@ bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record,
             if (!other_record->event.pressed) {
                 return false;
             }
-            return TIMER_DIFF_16(other_record->event.time, tap_hold_record->event.time) >= CHORD_TERM;
+            return TIMER_DIFF_16(other_record->event.time, tap_hold_record->event.time) >= chord_term;
     }
     // Layer-tap thumb keys and everything else: default '*' rule —
     // thumbs hold whenever chorded with another key.
