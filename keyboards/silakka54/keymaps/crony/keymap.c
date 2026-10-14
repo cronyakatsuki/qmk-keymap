@@ -134,6 +134,24 @@ static const char *hrm_kc_name(uint16_t kc) {
     return "UNNAMED";
 }
 
+// ── Combos (data-driven race fixes) ──
+// COMBO_TERM 150 covers both measured bands (TAP ≤116 ms, HOLD ≥134 ms), so
+// any of these paired presses resolves to the intentional output regardless
+// of which timing race would have lost.
+enum combo_events {
+    C_F_SLSH,   // F + /  → ?   (the f/-race becomes the intended ?)
+    C_J_SLSH,   // J + /  → ?
+    C_F_J,      // F + J  → Caps Word (single twin-shift gesture)
+};
+const uint16_t PROGMEM combo_f_slsh[] = {HOME_F, KC_SLSH, COMBO_END};
+const uint16_t PROGMEM combo_j_slsh[] = {HOME_J, KC_SLSH, COMBO_END};
+const uint16_t PROGMEM combo_f_j[]    = {HOME_F, HOME_J,  COMBO_END};
+combo_t key_combos[] = {
+    COMBO(combo_f_slsh, S(KC_SLSH)),
+    COMBO(combo_j_slsh, S(KC_SLSH)),
+    COMBO(combo_f_j,    CW_TOGG),
+};
+
 // Per-key tapping term offsets.
 // With RETRO_TAPPING + HOLD_ON_OTHER_KEY_PRESS, the GUI bump is no longer
 // needed — the uniform chordal-hold timing rule guards accidental Win chords,
