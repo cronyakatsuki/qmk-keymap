@@ -232,9 +232,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             } else if ((keycode & 0xF000) == QK_LAYER_TAP) {
                 // layer-tap key: decode the tap key so LT-sourced backspaces
                 // (your LT(_CRO, KC_BSPC)) get counted for the misfire ledger
-                uprintf("[KEY] %5s dn t=%lu ms layer-tapLT=%u hold-layer=%u\n",
+                uprintf("[KEY] %5s dn t=%lu ms layer-tap-to=%u on-layer=%u\n",
                         hrm_kc_name(keycode & 0x00FF), (unsigned long)t,
-                        (keycode >> 8) & 0x0FLAYER(0x0F),
+                        (keycode >> 8) & 0x0F,
                         get_highest_layer(layer_state));
             } else if ((keycode & 0xF000) == QK_MOD_TAP) {
                 uprintf("[KEY] %5s dn t=%lu ms layer=%u\n",
