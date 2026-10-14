@@ -14,26 +14,6 @@ enum custom_keycodes {
     MARK_RACE = SAFE_RANGE,
 };
 
-static const char *hrm_kc_name(uint16_t kc) {
-    switch (kc) {
-        case HOME_A: return "A(GUI)";
-        case HOME_S: return "S(ALT)";
-        case HOME_D: return "D(CTL)";
-        case HOME_F: return "F(SHFT)";
-        case HOME_J: return "J(SHFT)";
-        case HOME_K: return "K(CTL)";
-        case HOME_L: return "L(ALT)";
-        case HOME_SCLN: return ";(GUI)";
-        case KC_SLSH: return "SLSH";
-        case KC_SPACE: return "SPACE";
-        case KC_ENTER: return "ENTER";
-        case KC_BSPC: return "BKSP";
-    }
-    uint8_t m = kc & 0xF000;
-    if (m != 0u) return "OTHER";
-    return "UNNAMED";
-}
-
 // Layer names
 enum layer {
     _BASE = 0,
@@ -135,6 +115,25 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     )
 };
 
+static const char *hrm_kc_name(uint16_t kc) {
+    switch (kc) {
+        case HOME_A: return "A(GUI)";
+        case HOME_S: return "S(ALT)";
+        case HOME_D: return "D(CTL)";
+        case HOME_F: return "F(SHFT)";
+        case HOME_J: return "J(SHFT)";
+        case HOME_K: return "K(CTL)";
+        case HOME_L: return "L(ALT)";
+        case HOME_SCLN: return ";(GUI)";
+        case KC_SLSH: return "SLSH";
+        case KC_SPACE: return "SPACE";
+        case KC_ENTER: return "ENTER";
+        case KC_BSPC: return "BKSP";
+    }
+    if ((kc & 0xF000) != 0u) return "OTHER";
+    return "UNNAMED";
+}
+
 // Per-key tapping term offsets.
 // With RETRO_TAPPING + HOLD_ON_OTHER_KEY_PRESS, the GUI bump is no longer
 // needed — the uniform chordal-hold timing rule guards accidental Win chords,
@@ -159,7 +158,6 @@ bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record,
                       uint16_t other_keycode, keyrecord_t *other_record) {
     // ── DIAGNOSTICS: decision capture for urob/positional comparison ──
     bool out            = false;
-    bool home_row_class = false;
     uint16_t gap_ms     = TIMER_DIFF_16(other_record->event.time,
                                        tap_hold_record->event.time);
 
@@ -172,7 +170,6 @@ bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record,
         case HOME_K:
         case HOME_L:
         case HOME_SCLN:
-            home_row_class = true;
             if (!other_record->event.pressed) {
                 out = false;
             } else {
@@ -183,7 +180,6 @@ bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record,
             }
             break;
         default:
-            home_row_class = false;
             out = get_chordal_hold_default(tap_hold_record, other_record);
             break;
     }
@@ -204,19 +200,19 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (record->event.pressed) {
         switch (keycode) {
         case MARK_RACE:
-            uprintf("==== ⚑ RACE MARK t=%u ms layer=%u ====\n",
-                    t, get_highest_layer(layer_state));
+            uprintf("==== ⚑ RACE MARK t=%lu ms layer=%u ====\n",
+                    (unsigned long)t, get_highest_layer(layer_state));
             break;
         default:
             if (keycode < QK_LAYER_TAP) {  // plain keys, not layer/mod-tap noise
-                uprintf("[KEY] %5s dn t=%u ms layer=%u\n",
-                        hrm_kc_name(keycode), t,
+                uprintf("[KEY] %5s dn t=%lu ms layer=%u\n",
+                        hrm_kc_name(keycode), (unsigned long)t,
                         get_highest_layer(layer_state));
             }
             break;
         }
     } else if (keycode == MARK_RACE) {
-        uprintf("──── ⚑ mark released t=%u ms ────\n", t);
+        uprintf("──── ⚑ mark released t=%lu ms ────\n", (unsigned long)t);
     }
 #else
     (void)keycode;
