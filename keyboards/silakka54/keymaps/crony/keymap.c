@@ -12,7 +12,29 @@
 
 enum custom_keycodes {
     MARK_RACE = SAFE_RANGE,
+    STICKY_SHIFT,
 };
+
+// ── Sticky shift (data-driven, 2026-10-14) ──
+// Tap  → one-shot Shift: the NEXT letter capitalizes ("You"-type mid-sentence
+//        caps, no hold-beat, no timing race).
+// Hold → ordinary held Shift (shift-hotkeys keep working).
+// The modifier is registered at press (you keep your speculative-hold habit)
+// and on release it converts to a oneshot if no letter consumed it.
+bool sticky_shift_held   = false;
+bool sticky_shift_used   = false;
+uint32_t sticky_shift_t0 = 0;
+
+#ifdef CONSOLE_ENABLE
+static void sticky_shift_log(const char *phase, uint32_t t) {
+    uprintf("[STKY] %s t=%lu ms\n", phase, (unsigned long)t);
+}
+#else
+static void sticky_shift_log(const char *phase, uint32_t t) {
+    (void)phase;
+    (void)t;
+}
+#endif
 
 // Layer names
 enum layer {
