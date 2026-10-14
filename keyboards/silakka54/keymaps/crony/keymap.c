@@ -258,3 +258,12 @@ void keyboard_post_init_user(void) {
     debug_enable = true;   // stream print output over the console endpoint
 #endif
 }
+
+#ifdef CONSOLE_ENABLE
+layer_state_t layer_state_set_user(layer_state_t state) {
+    uprintf("[LAY] now=%u -> %u (t=%lu ms)\n",
+            get_highest_layer(layer_state), get_highest_layer(state),
+            (unsigned long)timer_read32());
+    return state;
+}
+#endif
