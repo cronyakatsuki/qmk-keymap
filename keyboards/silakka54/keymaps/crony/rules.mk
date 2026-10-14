@@ -1,5 +1,9 @@
 MOUSEKEY_ENABLE = yes
 
+# ── Data-driven fixes (2026-10-14 telemetry) ──
+COMBO_ENABLE = yes
+CAPS_WORD_ENABLE = yes
+
 # ── Diagnostics build (temporary) ──
 # Enables USB console telemetry for the HRM decision capture.
 # process_record_user + get_chordal_hold print key/chord events via uprintf.
