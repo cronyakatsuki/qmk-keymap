@@ -222,7 +222,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     (unsigned long)t, get_highest_layer(layer_state));
             break;
         default:
-            if (keycode < QK_LAYER_TAP) {  // plain keys, not layer/mod-tap noise
+            if (keycode < QK_LAYER_TAP || keycode == CW_TOGG ||
+                (keycode & QK_USR_KEYCODE_MASK) != 0u) {
                 uprintf("[KEY] %5s dn t=%lu ms layer=%u\n",
                         hrm_kc_name(keycode), (unsigned long)t,
                         get_highest_layer(layer_state));
