@@ -4,6 +4,36 @@
 #include QMK_KEYBOARD_H
 #include "keymap_croatian.h"
 
+/* ══════════════════════════════════════════════════════════════
+ *  DIAGNOSTICS BUILD (temporary) — HRM decision telemetry
+ *  Captured with `qmk console`. Remove the marked blocks after
+ *  the capture run to restore the lean production build.
+ * ══════════════════════════════════════════════════════════════ */
+
+enum custom_keycodes {
+    MARK_RACE = SAFE_RANGE,
+};
+
+static const char *hrm_kc_name(uint16_t kc) {
+    switch (kc) {
+        case HOME_A: return "A(GUI)";
+        case HOME_S: return "S(ALT)";
+        case HOME_D: return "D(CTL)";
+        case HOME_F: return "F(SHFT)";
+        case HOME_J: return "J(SHFT)";
+        case HOME_K: return "K(CTL)";
+        case HOME_L: return "L(ALT)";
+        case HOME_SCLN: return ";(GUI)";
+        case KC_SLSH: return "SLSH";
+        case KC_SPACE: return "SPACE";
+        case KC_ENTER: return "ENTER";
+        case KC_BSPC: return "BKSP";
+    }
+    uint8_t m = kc & 0xF000;
+    if (m != 0u) return "OTHER";
+    return "UNNAMED";
+}
+
 // Layer names
 enum layer {
     _BASE = 0,
