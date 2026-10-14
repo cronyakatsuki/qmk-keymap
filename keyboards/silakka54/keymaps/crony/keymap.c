@@ -182,5 +182,18 @@ bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record,
     }
     // Layer-tap thumb keys and everything else: default '*' rule —
     // thumbs hold whenever chorded with another key.
+    // ── DIAGNOSTICS ──
+    uint16_t other_kc = other_record->event.pressed
+                          ? other_record->keycode : 0;
+    uint16_t goad     = TIMER_DIFF_16(other_record->event.time,
+                                      tap_hold_record->event.time);
+    uprintf("[CHD] mod=%s other=%s gap_ms=%u verdict=%s\n",
+            hrm_kc_name(tap_hold_keycode),
+            other_kc ? hrm_kc_name(other_kc) : "(release-line)",
+            goad,
+            chord_out ? "HOLD" : "TAP");
+    return chord_out;
+#else
     return get_chordal_hold_default(tap_hold_record, other_record);
+#endif
 }
