@@ -54,3 +54,15 @@
 
 // Double-tap always = character (not hold auto-repeat)
 #define QUICK_TAP_TERM 0
+
+// ── Data-driven fixes (2026-10-14 telemetry) ──
+// Measured decision bands: TAP 26–116 ms, HOLD 134–186 ms → the timing
+// boundary is already at its optimum; these structures sidestep the race
+// instead of re-tuning it.
+#define COMBO_TERM 150              // covers the whole TAP band (≤116 ms) and
+                                    // the deliberate-hold band (≥134 ms) — the
+                                    // combo converts a race into the right char
+                                    // either way
+#define FLOW_TAP_TERM 100           // instant-settle rolls inside the 87–110 ms
+                                    // band; deliberate holds (≥134 ms) unaffected
+#define CAPS_WORD_IDLE_TIMEOUT 5000 // auto-off after 5 s idle during a race
