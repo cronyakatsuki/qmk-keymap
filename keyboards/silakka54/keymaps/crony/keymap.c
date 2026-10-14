@@ -157,43 +157,76 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
 // (hold whenever chorded), so fluent layer use (Esc + arrows) stays instant.
 bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record,
                       uint16_t other_keycode, keyrecord_t *other_record) {
-    // Shift home-row mods (F/J) use the shorter CHORD_TERM_SHIFT: deliberate
-    // Shift rolls (quotes, capitals, parens) are fast and were eaten at the
-    // full CHORD_TERM — a stray "f"/"j" landed before the character.
-    bool is_shift_mod = (tap_hold_keycode == HOME_F) || (tap_hold_keycode == HOME_J);
-    uint16_t chord_term = is_shift_mod ? CHORD_TERM_SHIFT : CHORD_TERM;
+    // ── DIAGNOSTICS: decision capture for urob/positional comparison ──
+    bool out            = false;
+    bool home_row_class = false;
+    uint16_t gap_ms     = TIMER_DIFF_16(other_record->event.time,
+                                       tap_hold_record->event.time);
 
     switch (tap_hold_keycode) {
-        case HOME_A:      // LGUI_T(KC_A)
-        case HOME_S:      // LALT_T(KC_S)
-        case HOME_D:      // LCTL_T(KC_D)
-        case HOME_F:      // LSFT_T(KC_F)
-        case HOME_J:      // RSFT_T(KC_J)
-        case HOME_K:      // RCTL_T(KC_K)
-        case HOME_L:      // LALT_T(KC_L)
-        case HOME_SCLN:   // RGUI_T(KC_SCLN)
-            // Consulted at the other key's release → a pending typing roll;
-            // settle as tap (deliberate chords were already settled at press
-            // time via HOLD_ON_OTHER_KEY_PRESS).
+        case HOME_A:
+        case HOME_S:
+        case HOME_D:
+        case HOME_F:
+        case HOME_J:
+        case HOME_K:
+        case HOME_L:
+        case HOME_SCLN:
+            home_row_class = true;
             if (!other_record->event.pressed) {
-                return false;
+                out = false;
+            } else {
+                bool is_shift_mod = (tap_hold_keycode == HOME_F) ||
+                                    (tap_hold_keycode == HOME_J);
+                uint16_t chord_term = is_shift_mod ? CHORD_TERM_SHIFT : CHORD_TERM;
+                out = gap_ms >= chord_term;
             }
-            return TIMER_DIFF_16(other_record->event.time, tap_hold_record->event.time) >= chord_term;
+            break;
+        default:
+            home_row_class = false;
+            out = get_chordal_hold_default(tap_hold_record, other_record);
+            break;
     }
-    // Layer-tap thumb keys and everything else: default '*' rule —
-    // thumbs hold whenever chorded with another key.
-    // ── DIAGNOSTICS ──
-    uint16_t other_kc = other_record->event.pressed
-                          ? other_record->keycode : 0;
-    uint16_t goad     = TIMER_DIFF_16(other_record->event.time,
-                                      tap_hold_record->event.time);
-    uprintf("[CHD] mod=%s other=%s gap_ms=%u verdict=%s\n",
-            hrm_kc_name(tap_hold_keycode),
-            other_kc ? hrm_kc_name(other_kc) : "(release-line)",
-            goad,
-            chord_out ? "HOLD" : "TAP");
-    return chord_out;
+
+    if (other_record->event.pressed) {  // only log the deciding (press) consult
+        uprintf("[CHD] mod=%s other=%s gap_ms=%u verdict=%s\n",
+                hrm_kc_name(tap_hold_keycode),
+                hrm_kc_name(other_keycode),
+                gap_ms,
+                out ? "HOLD" : "TAP");
+    }
+    return out;
+}
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+#ifdef CONSOLE_ENABLE
+    uint32_t t = timer_read32();
+    if (record->event.pressed) {
+        switch (keycode) {
+        case MARK_RACE:
+            uprintf("==== ⚑ RACE MARK t=%u ms layer=%u ====\n",
+                    t, get_highest_layer(layer_state));
+            break;
+        default:
+            if (keycode < QK_LAYER_TAP) {  // plain keys, not layer/mod-tap noise
+                uprintf("[KEY] %5s dn t=%u ms layer=%u\n",
+                        hrm_kc_name(keycode), t,
+                        get_highest_layer(layer_state));
+            }
+            break;
+        }
+    } else if (keycode == MARK_RACE) {
+        uprintf("──── ⚑ mark released t=%u ms ────\n", t);
+    }
 #else
-    return get_chordal_hold_default(tap_hold_record, other_record);
+    (void)keycode;
+    (void)record;
+#endif
+    return true;
+}
+
+void keyboard_post_init_user(void) {
+#ifdef CONSOLE_ENABLE
+    debug_enable = true;   // stream print output over the console endpoint
 #endif
 }
