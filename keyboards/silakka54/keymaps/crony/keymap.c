@@ -217,13 +217,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     uint32_t t = timer_read32();
     if (record->event.pressed) {
         switch (keycode) {
+        case CW_TOGG:
+            uprintf("==== [CAPSWORD] toggle t=%lu ms ====\n", (unsigned long)t);
+            break;
         case MARK_RACE:
             uprintf("==== ⚑ RACE MARK t=%lu ms layer=%u ====\n",
                     (unsigned long)t, get_highest_layer(layer_state));
             break;
         default:
             if (keycode < QK_LAYER_TAP || keycode == CW_TOGG ||
-                (keycode & QK_USR_KEYCODE_MASK) != 0u) {
+                IS_USER_KEYCODE(keycode)) {
                 uprintf("[KEY] %5s dn t=%lu ms layer=%u\n",
                         hrm_kc_name(keycode), (unsigned long)t,
                         get_highest_layer(layer_state));
